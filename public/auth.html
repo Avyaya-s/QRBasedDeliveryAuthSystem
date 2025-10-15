@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Delivery Authentication</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f2f6fc;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    h2 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+    .container {
+      background: white;
+      padding: 25px 30px;
+      border-radius: 10px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      width: 320px;
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+    button {
+      background-color: #0066ff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0047cc;
+    }
+    #loginError {
+      margin-top: 8px;
+      color: red;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Delivery Authentication</h2>
+  <div class="container">
+    <div id="output">Loading...</div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBct3A-1G4eQ8WFKu8pxpayA664D6HAeMg",
+      authDomain: "deliveryauthsystem.firebaseapp.com",
+      projectId: "deliveryauthsystem",
+      storageBucket: "deliveryauthsystem.firebasestorage.app",
+      messagingSenderId: "1000361442073",
+      appId: "1:1000361442073:web:bae5bcfe51058a8742e388",
+      measurementId: "G-KVS816GE58"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const productId = urlParams.get("id");
+    const faceVerified = urlParams.get("faceVerified") === "true";
+    const output = document.getElementById("output");
+
+    function showLoginForm() {
+      output.innerHTML = `
+        <h3>Login</h3>
+        <input type="email" id="email" placeholder="Email" />
+        <input type="password" id="password" placeholder="Password" />
+        <button id="loginBtn">Login</button>
+        <div id="loginError"></div>
+      `;
+      document.getElementById("loginBtn").onclick = async () => {
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+        try {
+          await signInWithEmailAndPassword(auth, email, password);
+        } catch (err) {
+          document.getElementById("loginError").innerText = err.message;
+        }
+      };
+    }
+
+    async function checkDeliveryAccess(user) {
+      if (!productId) {
+        output.innerText = "No delivery ID found.";
+        return;
+      }
+
+      const docRef = doc(db, "deliveries", productId);
+      const docSnap = await getDoc(docRef);
+
+      if (!docSnap.exists()) {
+        output.innerText = "Delivery not found.";
+        return;
+      }
+
+      const data = docSnap.data();
+
+      if (data.owner === user.email) {
+
+        // ✅ Auto-approve if faceVerified=true and not already approved
+        if (faceVerified && data.status !== "approved") {
+          await setDoc(docRef, { ...data, status: "approved" });
+          window.location.href = "thankyou.html";
+          return;
+        }
+
+        let messageHTML = `
+          <h3>Delivery ID: ${productId}</h3>
+          <p><strong>Owner:</strong> ${user.email}</p>
+          <p><strong>Status:</strong> ${data.status}</p>
+        `;
+
+        if (data.status === "approved") {
+          messageHTML += `
+            <p style="color: red; font-weight: bold;">Parcel already approved.</p>
+            <p style="font-size: 14px;">If this wasn't you, contact customer care immediately.</p>
+          `;
+        } else {
+          messageHTML += `<button id="approveBtn">Approve Delivery</button>`;
+        }
+
+        messageHTML += `<button id="logoutBtn">Logout</button>`;
+        output.innerHTML = messageHTML;
+
+        if (data.status !== "approved") {
+          document.getElementById("approveBtn").onclick = () => {
+            window.location.href = `face.html?id=${productId}`;
+          };
+        }
+        document.getElementById("logoutBtn").onclick = () => signOut(auth);
+
+      } else {
+        alert("You are not authorized for this delivery.");
+        signOut(auth);
+      }
+    }
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        checkDeliveryAccess(user);
+      } else {
+        showLoginForm();
+      }
+    });
+  </script>
+</body>
+</html>

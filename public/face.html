@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Face Login with Liveness</title>
+  <style>
+    video { border: 1px solid black; }
+  </style>
+</head>
+<body>
+  <h2>Login Using Your Face</h2>
+  <video id="video" width="320" height="240" autoplay muted playsinline></video>
+  <canvas id="canvas" width="320" height="240" style="display: none;"></canvas>
+  <p id="result">Please blink to login...</p>
+
+  <!-- MediaPipe FaceMesh + Camera -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
+  
+<script src="static/script.js" type="module"></script>
+</body>
+</html>

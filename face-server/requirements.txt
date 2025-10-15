@@ -1,0 +1,5 @@
+flask
+deepface==0.0.93
+opencv-python
+numpy
+tensorflow==2.11.0
