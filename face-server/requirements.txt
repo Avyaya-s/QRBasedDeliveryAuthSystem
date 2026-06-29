@@ -1,5 +1,6 @@
 flask
+flask-cors
 deepface==0.0.93
-opencv-python
+opencv-python-headless
 numpy
 tensorflow==2.11.0
