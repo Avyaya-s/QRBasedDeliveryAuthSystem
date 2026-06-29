@@ -104,7 +104,7 @@ function captureImage() {
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
   const dataURL = canvas.toDataURL('image/png');
 
-  fetch('https://f07036d2cd63.ngrok-free.app/login', {
+  fetch('https://eabc-2401-4900-9390-4e8b-f1b6-19cd-c11b-60fc.ngrok-free.app/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ image: dataURL })
