@@ -84,7 +84,6 @@ __pycache__/
 
 # Temporary image uploads
 face-server/static/uploads/
-face-server/static/user_images/
 
 # Ignore compiled models or checkpoints if added later
 *.h5
